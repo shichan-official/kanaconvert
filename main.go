@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ikawaha/kagome/v2/dict"
 	"github.com/ikawaha/kagome/v2/tokenizer"
 )
 
@@ -23,8 +24,20 @@ type ConvertResponse struct {
 
 // Helper function to convert tokens to Hiragana or Katakana
 func convertToKana(text string, toKatakana bool) string {
-	t := tokenizer.New()
-	tokens := t.Analyze(text, tokenizer.Search)
+	d, err := dict.New()
+	if err != nil {
+		log.Println("Error creating dictionary:", err)
+		return ""
+	}
+
+	t, err := tokenizer.New(d) // Initialize tokenizer with the dictionary
+	if err != nil {
+		log.Println("Error creating tokenizer:", err)
+		return ""
+	}
+
+	// Analyze the text as a string
+	tokens := t.Analyze(text, tokenizer.Search) // Pass text as string
 	var result strings.Builder
 
 	for _, token := range tokens {
