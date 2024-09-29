@@ -101,6 +101,40 @@ func convertToRomanji(text string) string {
 	return result.String()
 }
 
+// Convert Katakana to Hiragana
+func convertToHiragana(text string) string {
+	// Katakana to Hiragana mapping
+	hiraganaMap := map[string]string{
+		"ア": "あ", "イ": "い", "ウ": "う", "エ": "え", "オ": "お",
+		"カ": "か", "キ": "き", "ク": "く", "ケ": "け", "コ": "こ",
+		"サ": "さ", "シ": "し", "ス": "す", "セ": "せ", "ソ": "そ",
+		"タ": "た", "チ": "ち", "ツ": "つ", "テ": "て", "ト": "と",
+		"ナ": "な", "ニ": "に", "ヌ": "ぬ", "ネ": "ね", "ノ": "の",
+		"ハ": "は", "ヒ": "ひ", "フ": "ふ", "ヘ": "へ", "ホ": "ほ",
+		"マ": "ま", "ミ": "み", "ム": "む", "メ": "め", "モ": "も",
+		"ヤ": "や", "ユ": "ゆ", "ヨ": "よ",
+		"ラ": "ら", "リ": "り", "ル": "る", "レ": "れ", "ロ": "ろ",
+		"ワ": "わ", "ヲ": "を",
+		"ン": "ん",
+		// Voiced consonants
+		"ガ": "が", "ギ": "ぎ", "グ": "ぐ", "ゲ": "げ", "ゴ": "ご",
+		"ザ": "ざ", "ジ": "じ", "ズ": "ず", "ゼ": "ぜ", "ゾ": "ぞ",
+		"ダ": "だ", "ヂ": "ぢ", "ヅ": "づ", "デ": "で", "ド": "ど",
+		"バ": "ば", "ビ": "び", "ブ": "ぶ", "ベ": "べ", "ボ": "ぼ",
+		"パ": "ぱ", "ピ": "ぴ", "プ": "ぷ", "ペ": "ぺ", "ポ": "ぽ",
+	}
+
+	var result strings.Builder
+	for _, r := range text {
+		if hiragana, ok := hiraganaMap[string(r)]; ok {
+			result.WriteString(hiragana)
+		} else {
+			result.WriteString(string(r)) // Keep the character as is if not found in the map
+		}
+	}
+	return result.String()
+}
+
 // CORS Middleware to enable cross-origin requests
 func enableCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -124,9 +158,9 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hiragana := convertToKana(req.Text, false)
 	katakana := convertToKana(req.Text, true)
-	romanji := convertToRomanji(hiragana) // For simplicity, converting Hiragana to Romanji
+	hiragana := convertToHiragana(katakana)
+	romanji := convertToRomanji(hiragana)
 
 	res := ConvertResponse{
 		Hiragana: hiragana,
