@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/ikawaha/kagome/v2/dict"
+	"github.com/ikawaha/kagome-dict/ipa"
 	"github.com/ikawaha/kagome/v2/tokenizer"
 )
 
@@ -22,21 +22,17 @@ type ConvertResponse struct {
 	Romanji  string `json:"romanji"`
 }
 
+// Initialize tokenizer with IPA dictionary
+var t *tokenizer.Tokenizer
+
+func init() {
+	// Create a new tokenizer instance
+	t, _ = tokenizer.New(ipa.Dict())
+}
+
 // Helper function to convert tokens to Hiragana or Katakana
 func convertToKana(text string, toKatakana bool) string {
-	d, err := dict.New()
-	if err != nil {
-		log.Println("Error creating dictionary:", err)
-		return ""
-	}
-
-	t, err := tokenizer.New(d) // Initialize tokenizer with the dictionary
-	if err != nil {
-		log.Println("Error creating tokenizer:", err)
-		return ""
-	}
-
-	// Analyze the text as a string
+	// Analyze the text
 	tokens := t.Analyze(text, tokenizer.Search) // Pass text as string
 	var result strings.Builder
 
