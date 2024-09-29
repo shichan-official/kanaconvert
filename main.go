@@ -63,6 +63,20 @@ func convertToRomanji(text string) string {
 	return result.String()
 }
 
+// CORS Middleware to enable cross-origin requests
+func enableCors(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow all origins or specify frontend URL
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
 // API handler for the Kanji conversion
 func convertHandler(w http.ResponseWriter, r *http.Request) {
 	var req ConvertRequest
@@ -81,6 +95,30 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 		Katakana: katakana,
 		Romanji:  romanji,
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
+// Existing sum handler for reference
+func sumHandler(w http.ResponseWriter, r *http.Request) {
+	type SumRequest struct {
+		Num1 float64 `json:"num1"`
+		Num2 float64 `json:"num2"`
+	}
+	type SumResponse struct {
+		Sum float64 `json:"sum"`
+	}
+
+	var req SumRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	sum := req.Num1 + req.Num2
+	res := SumResponse{Sum: sum}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
