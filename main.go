@@ -22,44 +22,37 @@ type ConvertResponse struct {
 	Hiragana string `json:"hiragana"`
 	Katakana string `json:"katakana"`
 	Romanji  string `json:"romanji"`
-	Debug    string `json:"debug"`
 }
 
-// Initialize tokenizer with IPA dictionary
-var t *tokenizer.Tokenizer
-
-func init() {
-	// Create a new tokenizer instance
-	t, _ = tokenizer.New(ipa.Dict())
-}
-
-// Convert Katakana to Hiragana
+// Convert Katakana to Hiragana for mixed text
 func katakanaToHiragana(text string) string {
 	var result string
 	for _, r := range text {
+		// If the character is Katakana, convert it to Hiragana
 		if unicode.In(r, unicode.Katakana) {
-			result += string(r - 0x60)
+			result += string(r - 0x60) // Katakana to Hiragana shift
 		} else {
-			result += string(r)
+			result += string(r) // Leave other characters unchanged
 		}
 	}
 	return result
 }
 
-// Convert Hiragana to Katakana
+// Convert Hiragana to Katakana for mixed text
 func hiraganaToKatakana(text string) string {
 	var result string
 	for _, r := range text {
+		// If the character is Hiragana, convert it to Katakana
 		if unicode.In(r, unicode.Hiragana) {
-			result += string(r + 0x60)
+			result += string(r + 0x60) // Hiragana to Katakana shift
 		} else {
-			result += string(r)
+			result += string(r) // Leave other characters unchanged
 		}
 	}
 	return result
 }
 
-// Convert Kanji and Hiragana/Katakana to Hiragana
+// Convert all text (including Kanji) to Hiragana
 func convertToHiragana(text string) string {
 	t, err := tokenizer.New(ipa.Dict(), tokenizer.OmitBosEos())
 	if err != nil {
@@ -73,21 +66,22 @@ func convertToHiragana(text string) string {
 		if token.Class == tokenizer.DUMMY {
 			continue
 		}
-		// Get the reading (pronunciation) in Hiragana
 		features := token.Features()
 		if len(features) > 6 && features[6] != "*" {
-			hiraganaResult += features[6] // Feature index 6 contains the Hiragana reading
+			hiraganaResult += features[6] // Use the Hiragana reading
 		} else {
-			hiraganaResult += token.Surface // If no reading, add the surface as is
+			hiraganaResult += token.Surface // Use the surface if no reading
 		}
 	}
-	return hiraganaResult
+
+	// Convert any Katakana in the result to Hiragana
+	return katakanaToHiragana(hiraganaResult)
 }
 
-// Convert Kanji and Hiragana/Katakana to Katakana
+// Convert all text (including Kanji) to Katakana
 func convertToKatakana(text string) string {
-	hiragana := convertToHiragana(text) // Get the Hiragana conversion first
-	return hiraganaToKatakana(hiragana) // Convert Hiragana to Katakana
+	hiragana := convertToHiragana(text) // First, convert everything to Hiragana
+	return hiraganaToKatakana(hiragana) // Then, convert Hiragana to Katakana
 }
 
 // Simple Romaji conversion (just a mock example)
