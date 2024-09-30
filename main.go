@@ -20,7 +20,6 @@ type ConvertRequest struct {
 // Response body for the conversion
 type ConvertResponse struct {
 	Hiragana          string `json:"hiragana"`
-	HalfWidthHiragana string `json:"halfWidthHiragana"`
 	Katakana          string `json:"katakana"`
 	HalfWidthKatakana string `json:"halfWidthKatakana"`
 	Romanji           string `json:"romanji"`
@@ -88,27 +87,15 @@ func convertToKatakana(text string) string {
 	return hiraganaToKatakana(hiragana) // Then, convert Hiragana to Katakana
 }
 
-// ConvertToHalfWidthHiragana converts full-width hiragana to half-width hiragana
-func ConvertToHalfWidthHiragana(input string) string {
-	var result []rune
-	for _, r := range input {
-		if r >= '\u3040' && r <= '\u309F' { // Full-width Hiragana range
-			// Half-width Hiragana is in the range U+3041 to U+304E
-			result = append(result, r-0x60) // Convert to half-width
-		} else {
-			result = append(result, r) // Keep other characters as is
-		}
-	}
-	return string(result)
-}
-
 // ConvertToHalfWidthKatakana converts full-width katakana to half-width katakana
 func ConvertToHalfWidthKatakana(input string) string {
 	var result []rune
 	for _, r := range input {
-		if r >= '\u30A0' && r <= '\u30FF' { // Full-width Katakana range
-			// Convert to half-width Katakana
-			result = append(result, r-0x60) // Correctly convert to half-width
+		// Full-width Katakana range: U+30A0 to U+30FF
+		if r >= '\u30A0' && r <= '\u30FF' {
+			// Convert to half-width (U+FF66 to U+FF9F)
+			// Mapping from full-width Katakana to half-width Katakana
+			result = append(result, r-0x60) // Shift by 96 (0x60)
 		} else {
 			result = append(result, r) // Keep other characters as is
 		}
@@ -140,14 +127,12 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hiragana := convertToHiragana(req.Text)
-	halfWidthHiragana := ConvertToHalfWidthHiragana(hiragana)
 	katakana := convertToKatakana(req.Text)
 	halfWidthKatakana := ConvertToHalfWidthKatakana(katakana)
 	romanji := kana.KanaToRomaji(hiragana)
 
 	res := ConvertResponse{
 		Hiragana:          hiragana,
-		HalfWidthHiragana: halfWidthHiragana,
 		Katakana:          katakana,
 		HalfWidthKatakana: halfWidthKatakana,
 		Romanji:           romanji,
