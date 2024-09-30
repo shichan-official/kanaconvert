@@ -92,7 +92,8 @@ func convertToKatakana(text string) string {
 func ConvertToHalfWidthHiragana(input string) string {
 	var result []rune
 	for _, r := range input {
-		if r >= '\u3040' && r <= '\u309F' {
+		if r >= '\u3040' && r <= '\u309F' { // Full-width Hiragana range
+			// Half-width Hiragana is in the range U+3041 to U+304E
 			result = append(result, r-0x60) // Convert to half-width
 		} else {
 			result = append(result, r) // Keep other characters as is
@@ -105,8 +106,9 @@ func ConvertToHalfWidthHiragana(input string) string {
 func ConvertToHalfWidthKatakana(input string) string {
 	var result []rune
 	for _, r := range input {
-		if r >= '\u30A0' && r <= '\u30FF' {
-			result = append(result, r-0x60) // Convert to half-width
+		if r >= '\u30A0' && r <= '\u30FF' { // Full-width Katakana range
+			// Convert to half-width Katakana
+			result = append(result, r-0x60) // Correctly convert to half-width
 		} else {
 			result = append(result, r) // Keep other characters as is
 		}
