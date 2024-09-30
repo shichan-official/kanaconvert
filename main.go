@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
+	"unicode"
 
 	"github.com/ikawaha/kagome-dict/ipa"
 	"github.com/ikawaha/kagome/v2/tokenizer"
@@ -31,31 +33,61 @@ func init() {
 	t, _ = tokenizer.New(ipa.Dict())
 }
 
-// Helper function to convert tokens to Hiragana or Katakana
-func convertToKana(text string, toKatakana bool) (string, string) {
-	// Analyze the text
-	tokens := t.Analyze(text, tokenizer.Search) // Pass text as string
-	var result strings.Builder
-	var debug strings.Builder
-
-	for _, token := range tokens {
-		features := token.Features()
-		// Skip BOS and EOS tokens
-		if token.Surface == "BOS" || token.Surface == "EOS" {
-			continue
-		}
-		if len(features) > 7 {
-			debug.WriteString(strings.Join(features[:], ","))
-			if toKatakana {
-				result.WriteString(features[7]) // Katakana
-			} else {
-				result.WriteString(features[6]) // Hiragana
-			}
+// Convert Katakana to Hiragana
+func katakanaToHiragana(text string) string {
+	var result string
+	for _, r := range text {
+		if unicode.In(r, unicode.Katakana) {
+			result += string(r - 0x60)
 		} else {
-			result.WriteString(token.Surface)
+			result += string(r)
 		}
 	}
-	return result.String(), debug.String()
+	return result
+}
+
+// Convert Hiragana to Katakana
+func hiraganaToKatakana(text string) string {
+	var result string
+	for _, r := range text {
+		if unicode.In(r, unicode.Hiragana) {
+			result += string(r + 0x60)
+		} else {
+			result += string(r)
+		}
+	}
+	return result
+}
+
+// Convert Kanji and Hiragana/Katakana to Hiragana
+func convertToHiragana(text string) string {
+	t, err := tokenizer.New(ipa.Dict(), tokenizer.OmitBosEos())
+	if err != nil {
+		fmt.Println("Error initializing tokenizer:", err)
+		return ""
+	}
+
+	tokens := t.Analyze(text, tokenizer.Search)
+	var hiraganaResult string
+	for _, token := range tokens {
+		if token.Class == tokenizer.DUMMY {
+			continue
+		}
+		// Get the reading (pronunciation) in Hiragana
+		features := token.Features()
+		if len(features) > 6 && features[6] != "*" {
+			hiraganaResult += features[6] // Feature index 6 contains the Hiragana reading
+		} else {
+			hiraganaResult += token.Surface // If no reading, add the surface as is
+		}
+	}
+	return hiraganaResult
+}
+
+// Convert Kanji and Hiragana/Katakana to Katakana
+func convertToKatakana(text string) string {
+	hiragana := convertToHiragana(text) // Get the Hiragana conversion first
+	return hiraganaToKatakana(hiragana) // Convert Hiragana to Katakana
 }
 
 // Simple Romaji conversion (just a mock example)
@@ -127,15 +159,14 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	katakana, debug := convertToKana(req.Text, true)
-	hiragana, _ := convertToKana(req.Text, true)
+	hiragana := convertToHiragana(req.Text)
+	katakana := convertToKatakana(req.Text)
 	romanji := convertToRomanji(hiragana)
 
 	res := ConvertResponse{
 		Hiragana: hiragana,
 		Katakana: katakana,
 		Romanji:  romanji,
-		Debug:    debug,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
