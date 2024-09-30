@@ -20,6 +20,7 @@ type ConvertResponse struct {
 	Hiragana string `json:"hiragana"`
 	Katakana string `json:"katakana"`
 	Romanji  string `json:"romanji"`
+	Debug    string `json:"debug"`
 }
 
 // Initialize tokenizer with IPA dictionary
@@ -31,10 +32,11 @@ func init() {
 }
 
 // Helper function to convert tokens to Hiragana or Katakana
-func convertToKana(text string, toKatakana bool) string {
+func convertToKana(text string, toKatakana bool) (string, string) {
 	// Analyze the text
 	tokens := t.Analyze(text, tokenizer.Search) // Pass text as string
 	var result strings.Builder
+	var debug strings.Builder
 
 	for _, token := range tokens {
 		features := token.Features()
@@ -43,6 +45,7 @@ func convertToKana(text string, toKatakana bool) string {
 			continue
 		}
 		if len(features) > 7 {
+			debug.WriteString(strings.Join(features[:], ","))
 			if toKatakana {
 				result.WriteString(features[7]) // Katakana
 			} else {
@@ -52,7 +55,7 @@ func convertToKana(text string, toKatakana bool) string {
 			result.WriteString(token.Surface)
 		}
 	}
-	return result.String()
+	return result.String(), debug.String()
 }
 
 // Simple Romaji conversion (just a mock example)
@@ -124,49 +127,23 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	katakana := convertToKana(req.Text, true)
-	hiragana := convertToKana(katakana, false)
+	katakana, debug := convertToKana(req.Text, true)
+	hiragana, _ := convertToKana(katakana, false)
 	romanji := convertToRomanji(hiragana)
 
 	res := ConvertResponse{
 		Hiragana: hiragana,
 		Katakana: katakana,
 		Romanji:  romanji,
+		Debug:    debug,
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(res)
-}
-
-// Existing sum handler for reference
-func sumHandler(w http.ResponseWriter, r *http.Request) {
-	type SumRequest struct {
-		Num1 float64 `json:"num1"`
-		Num2 float64 `json:"num2"`
-	}
-	type SumResponse struct {
-		Sum float64 `json:"sum"`
-	}
-
-	var req SumRequest
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
-		return
-	}
-
-	sum := req.Num1 + req.Num2
-	res := SumResponse{Sum: sum}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
 }
 
 func main() {
-	// Existing sum handler
-	http.HandleFunc("/sum", enableCors(sumHandler))
-
-	// New Kanji to Kana conversion endpoint
+	// Kanji to Kana conversion endpoint
 	http.HandleFunc("/convert", enableCors(convertHandler))
 
 	port := "8080"
