@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"unicode"
 
-	"golang.org/x/text/width"
+	"github.com/ktnyt/go-moji"
 
 	"github.com/gojp/kana"
 	"github.com/ikawaha/kagome-dict/ipa"
@@ -114,7 +114,7 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 
 	hiragana := convertToHiragana(req.Text)
 	katakana := convertToKatakana(req.Text)
-	halfWidthKatakana := width.Narrow.String(katakana)
+	halfWidthKatakana := moji.Convert(katakana, moji.ZK, moji.HK)
 	romanji := kana.KanaToRomaji(hiragana)
 
 	res := ConvertResponse{
