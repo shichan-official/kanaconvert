@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
 	"unicode"
 
+	"github.com/gojp/kana"
 	"github.com/ikawaha/kagome-dict/ipa"
 	"github.com/ikawaha/kagome/v2/tokenizer"
 )
@@ -86,52 +86,6 @@ func convertToKatakana(text string) string {
 	return hiraganaToKatakana(hiragana) // Then, convert Hiragana to Katakana
 }
 
-// Simple Romaji conversion (just a mock example)
-func convertToRomanji(text string) string {
-	// This is a simple, non-perfect mock-up for Romaji conversion.
-	// For production use, consider using a robust library or external service.
-	romanjiMap := map[string]string{
-		"あ": "a", "い": "i", "う": "u", "え": "e", "お": "o",
-		"か": "ka", "き": "ki", "く": "ku", "け": "ke", "こ": "ko",
-		"さ": "sa", "し": "shi", "す": "su", "せ": "se", "そ": "so",
-		"た": "ta", "ち": "chi", "つ": "tsu", "て": "te", "と": "to",
-		"な": "na", "に": "ni", "ぬ": "nu", "ね": "ne", "の": "no",
-		"は": "ha", "ひ": "hi", "ふ": "fu", "へ": "he", "ほ": "ho",
-		"ま": "ma", "み": "mi", "む": "mu", "め": "me", "も": "mo",
-		"や": "ya", "ゆ": "yu", "よ": "yo",
-		"ら": "ra", "り": "ri", "る": "ru", "れ": "re", "ろ": "ro",
-		"わ": "wa", "を": "wo",
-		"ん": "n",
-		// Combine with diacritics for voiced consonants
-		"が": "ga", "ぎ": "gi", "ぐ": "gu", "げ": "ge", "ご": "go",
-		"ざ": "za", "じ": "ji", "ず": "zu", "ぜ": "ze", "ぞ": "zo",
-		"だ": "da", "ぢ": "ji", "づ": "zu", "で": "de", "ど": "do",
-		"ば": "ba", "び": "bi", "ぶ": "bu", "べ": "be", "ぼ": "bo",
-		"ぱ": "pa", "ぴ": "pi", "ぷ": "pu", "ぺ": "pe", "ぽ": "po",
-		// Long vowels
-		"ああ": "aa", "いい": "ii", "うう": "uu", "ええ": "ee", "おお": "oo",
-		"かあ": "kaa", "きい": "kii", "くう": "kuu", "けえ": "kee", "こお": "koo",
-		"さあ": "saa", "しい": "shii", "すう": "suu", "せえ": "see", "そお": "soo",
-		"たあ": "taa", "ちい": "chii", "つう": "tsuu", "てえ": "tee", "とお": "too",
-		"なあ": "naa", "にい": "nii", "ぬう": "nuu", "ねえ": "nee", "のお": "noo",
-		"はあ": "haa", "ひい": "hii", "ふう": "fuu", "へえ": "hee", "ほお": "hoo",
-		"まあ": "maa", "みい": "mii", "むう": "muu", "めえ": "mee", "もお": "moo",
-		"やあ": "yaa", "ゆう": "yuu", "よお": "yoo",
-		"らあ": "raa", "りい": "rii", "るう": "ruu", "れえ": "ree", "ろお": "roo",
-		"わあ": "waa", "をお": "woo",
-	}
-
-	var result strings.Builder
-	for _, r := range text {
-		if romanji, ok := romanjiMap[string(r)]; ok {
-			result.WriteString(romanji)
-		} else {
-			result.WriteString(string(r))
-		}
-	}
-	return result.String()
-}
-
 // CORS Middleware to enable cross-origin requests
 func enableCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +111,7 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 
 	hiragana := convertToHiragana(req.Text)
 	katakana := convertToKatakana(req.Text)
-	romanji := convertToRomanji(hiragana)
+	romanji := kana.KanaToRomaji(hiragana)
 
 	res := ConvertResponse{
 		Hiragana: hiragana,
