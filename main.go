@@ -60,17 +60,19 @@ func convertToHiragana(text string) string {
 		return ""
 	}
 
-	tokens := t.Analyze(text, tokenizer.Search)
+	tokens := t.Analyze(text, tokenizer.Normal)
 	var hiraganaResult string
 	for _, token := range tokens {
 		if token.Class == tokenizer.DUMMY {
 			continue
 		}
 		features := token.Features()
-		if len(features) > 6 && features[6] != "*" {
-			hiraganaResult += features[6] // Use the Hiragana reading
+		if len(features) > 7 && features[7] != "*" { // Kagome: Features[7] for phonetic reading (Hiragana)
+			hiraganaResult += features[7] // Use the Hiragana reading
+		} else if len(features) > 6 && features[6] != "*" { // Fallback to feature 6 if feature 7 is unavailable
+			hiraganaResult += features[6]
 		} else {
-			hiraganaResult += token.Surface // Use the surface if no reading
+			hiraganaResult += token.Surface // If no reading, add the surface as is
 		}
 	}
 
