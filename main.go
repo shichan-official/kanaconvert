@@ -20,9 +20,9 @@ type ConvertRequest struct {
 // Response body for the conversion
 type ConvertResponse struct {
 	Hiragana          string `json:"hiragana"`
-	HalfWidthHiragana string `json:"half_width_hiragana"`
+	HalfWidthHiragana string `json:"halfWidthHiragana"`
 	Katakana          string `json:"katakana"`
-	HalfWidthKatakana string `json:"half_width_katakana"`
+	HalfWidthKatakana string `json:"halfWidthKatakana"`
 	Romanji           string `json:"romanji"`
 }
 
@@ -92,10 +92,8 @@ func convertToKatakana(text string) string {
 func ConvertToHalfWidthHiragana(input string) string {
 	var result []rune
 	for _, r := range input {
-		// Full-width Hiragana range: U+3040 to U+309F
 		if r >= '\u3040' && r <= '\u309F' {
-			// Convert to half-width (U+3041 to U+304E)
-			result = append(result, r-0x60) // Shift by 96 (0x60)
+			result = append(result, r-0x60) // Convert to half-width
 		} else {
 			result = append(result, r) // Keep other characters as is
 		}
@@ -107,10 +105,8 @@ func ConvertToHalfWidthHiragana(input string) string {
 func ConvertToHalfWidthKatakana(input string) string {
 	var result []rune
 	for _, r := range input {
-		// Full-width Katakana range: U+30A0 to U+30FF
 		if r >= '\u30A0' && r <= '\u30FF' {
-			// Convert to half-width (U+FF66 to U+FF9F)
-			result = append(result, r-0x60) // Shift by 96 (0x60)
+			result = append(result, r-0x60) // Convert to half-width
 		} else {
 			result = append(result, r) // Keep other characters as is
 		}
