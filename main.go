@@ -19,9 +19,11 @@ type ConvertRequest struct {
 
 // Response body for the conversion
 type ConvertResponse struct {
-	Hiragana string `json:"hiragana"`
-	Katakana string `json:"katakana"`
-	Romanji  string `json:"romanji"`
+	Hiragana          string `json:"hiragana"`
+	HalfWidthHiragana string `json:"half_width_hiragana"`
+	Katakana          string `json:"katakana"`
+	HalfWidthKatakana string `json:"half_width_katakana"`
+	Romanji           string `json:"romanji"`
 }
 
 // Convert Katakana to Hiragana for mixed text
@@ -86,6 +88,36 @@ func convertToKatakana(text string) string {
 	return hiraganaToKatakana(hiragana) // Then, convert Hiragana to Katakana
 }
 
+// ConvertToHalfWidthHiragana converts full-width hiragana to half-width hiragana
+func ConvertToHalfWidthHiragana(input string) string {
+	var result []rune
+	for _, r := range input {
+		// Full-width Hiragana range: U+3040 to U+309F
+		if r >= '\u3040' && r <= '\u309F' {
+			// Convert to half-width (U+3041 to U+304E)
+			result = append(result, r-0x60) // Shift by 96 (0x60)
+		} else {
+			result = append(result, r) // Keep other characters as is
+		}
+	}
+	return string(result)
+}
+
+// ConvertToHalfWidthKatakana converts full-width katakana to half-width katakana
+func ConvertToHalfWidthKatakana(input string) string {
+	var result []rune
+	for _, r := range input {
+		// Full-width Katakana range: U+30A0 to U+30FF
+		if r >= '\u30A0' && r <= '\u30FF' {
+			// Convert to half-width (U+FF66 to U+FF9F)
+			result = append(result, r-0x60) // Shift by 96 (0x60)
+		} else {
+			result = append(result, r) // Keep other characters as is
+		}
+	}
+	return string(result)
+}
+
 // CORS Middleware to enable cross-origin requests
 func enableCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -110,13 +142,17 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hiragana := convertToHiragana(req.Text)
+	halfWidthHiragana := ConvertToHalfWidthHiragana(hiragana)
 	katakana := convertToKatakana(req.Text)
+	halfWidthKatakana := ConvertToHalfWidthKatakana(katakana)
 	romanji := kana.KanaToRomaji(hiragana)
 
 	res := ConvertResponse{
-		Hiragana: hiragana,
-		Katakana: katakana,
-		Romanji:  romanji,
+		Hiragana:          hiragana,
+		HalfWidthHiragana: halfWidthHiragana,
+		Katakana:          katakana,
+		HalfWidthKatakana: halfWidthKatakana,
+		Romanji:           romanji,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
