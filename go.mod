@@ -8,4 +8,5 @@ require (
 	github.com/gojp/kana v0.1.0 // indirect
 	github.com/ikawaha/kagome-dict v1.1.0 // indirect
 	github.com/ikawaha/kagome-dict/ipa v1.2.0 // indirect
+	golang.org/x/text v0.18.0 // indirect
 )

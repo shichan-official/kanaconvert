@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"unicode"
 
+	"golang.org/x/text/width"
+
 	"github.com/gojp/kana"
 	"github.com/ikawaha/kagome-dict/ipa"
 	"github.com/ikawaha/kagome/v2/tokenizer"
@@ -87,22 +89,6 @@ func convertToKatakana(text string) string {
 	return hiraganaToKatakana(hiragana) // Then, convert Hiragana to Katakana
 }
 
-// ConvertToHalfWidthKatakana converts full-width katakana to half-width katakana
-func ConvertToHalfWidthKatakana(input string) string {
-	var result []rune
-	for _, r := range input {
-		// Full-width Katakana range: U+30A0 to U+30FF
-		if r >= '\u30A0' && r <= '\u30FF' {
-			// Convert to half-width (U+FF66 to U+FF9F)
-			// Mapping from full-width Katakana to half-width Katakana
-			result = append(result, r-0x60) // Shift by 96 (0x60)
-		} else {
-			result = append(result, r) // Keep other characters as is
-		}
-	}
-	return string(result)
-}
-
 // CORS Middleware to enable cross-origin requests
 func enableCors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -128,7 +114,7 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 
 	hiragana := convertToHiragana(req.Text)
 	katakana := convertToKatakana(req.Text)
-	halfWidthKatakana := ConvertToHalfWidthKatakana(katakana)
+	halfWidthKatakana := width.Narrow.String(katakana)
 	romanji := kana.KanaToRomaji(hiragana)
 
 	res := ConvertResponse{
