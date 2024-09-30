@@ -128,7 +128,7 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	katakana, debug := convertToKana(req.Text, true)
-	hiragana, _ := convertToKana(katakana, false)
+	hiragana, _ := convertToKana(req.Text, true)
 	romanji := convertToRomanji(hiragana)
 
 	res := ConvertResponse{
