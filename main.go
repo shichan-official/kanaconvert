@@ -128,9 +128,17 @@ func convertHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(res)
 }
 
+// Ping handler to keep the backend alive
+func pingHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "alive"})
+}
+
 func main() {
 	// Kanji to Kana conversion endpoint
 	http.HandleFunc("/convert", enableCors(convertHandler))
+	http.HandleFunc("/ping", pingHandler)
 
 	port := "8080"
 	log.Printf("Server starting on port %s", port)
