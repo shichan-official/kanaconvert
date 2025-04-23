@@ -138,7 +138,7 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Kanji to Kana conversion endpoint
 	http.HandleFunc("/convert", enableCors(convertHandler))
-	http.HandleFunc("/ping", pingHandler)
+	http.HandleFunc("/ping", enableCors(pingHandler))
 
 	port := "8080"
 	log.Printf("Server starting on port %s", port)
